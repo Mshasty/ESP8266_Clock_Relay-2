@@ -1,5 +1,3 @@
-
-
 #include <Arduino.h>
 #include "JeeUI2.h" // Подключаем JeeUI2 фреймворк к проекту
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
