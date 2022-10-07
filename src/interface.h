@@ -1,6 +1,6 @@
 // глобальные переменные для работы с ними в программе
-int ds_int; // интервал замера ds18b20 в секундах 
-int mqtt_int; // интервал отправки данных по MQTT в секундах 
+unsigned int ds_int; // интервал замера ds18b20 в секундах 
+unsigned int mqtt_int; // интервал отправки данных по MQTT в секундах 
 float tem; // тут храним температуру
 float p_tem; // температура включения реле
 float h_tem; // гистерезис
@@ -12,6 +12,10 @@ boolean ch2_on;
 String tm[2];
 uint8_t YearTime; // Период показа даты
 uint8_t YearView;  // Время показа даты
+unsigned int NTP_req; // Период запроса NTP-сервера
+boolean eff_time = true; // показ эффекта перед часами
+unsigned int td = 25; // скорость эффекта перед часами
+boolean mqtt_enable = true;
 
 
 
@@ -32,8 +36,12 @@ void parameters(){
   jee.var(F("ch2_on"), F("true"));
   jee.var(F("tm1"), F("150107202130"));
   jee.var(F("tm2"), F("630216201940"));
-  jee.var(F("YearTime"), F("12")); // Тайм-зона
-  jee.var(F("YearView"), F("3")); // Тайм-зона
+  jee.var(F("YearTime"), F("12")); // Период покаха времени, сек
+  jee.var(F("YearView"), F("5")); // Период показа данных, сек
+  jee.var(F("NTP_req"), F("30")); // Период опроса NTP-сервера, мин.
+  jee.var(F("eff_time"), F("true")); 
+  jee.var(F("td"), F("25"));
+  jee.var(F("mqtt_enable"), F("true"));
 }
 
 void relayState(int pin, bool state, String id);
@@ -52,6 +60,10 @@ void update(){ // функция выполняется после ввода д
   tm[1] = jee.param("tm2");
   YearTime = jee.param("YearTime").toInt();
   YearView = jee.param("YearView").toInt();
+  NTP_req = jee.param("NTP_req").toInt();
+  eff_time = (jee.param("eff_time") == "true");
+  td = jee.param("td").toInt();
+  mqtt_enable = (jee.param("mqtt_enable") == "true");
 
   if (mode == "MAN"){ // обеспечиваем ручную работу реле
     if (jee.param("relay") == "true"){
@@ -91,16 +103,23 @@ void interface(){ // функция в которой мы формируем в
 
   jee.option("TEM", "Термостат"); // опция для элемента селекта
   jee.option("MAN", "Ручной"); // опция для элемента селекта
+  jee.option("TMR", "Таймер"); // опция для элемента селекта
+  jee.option("MQT", "MQTT"); // опция для элемента селекта
   jee.select("mode", "Режим работы устройства"); // Собственно сам элемент селект
 
   jee.number("ds_int", "Интервал опроса датчика сек.");
+  
+  jee.checkbox("mqtt_enable", "MQTT");
 
   jee.page(); // разделитель между страницами
   // Страница "Настройки таймера"
   jee.text("ntp_srv", "NTP server");
   jee.number("tz", "Тайм-зона");
+  jee.range("NTP_req", 15, 1440, 15, "Период опроса NTP-сервера, мин.");
   jee.range("YearTime", 6, 54, 3, "Период показа премени");
   jee.range("YearView", 2, 12, 1, "Период показа данных");
+  jee.checkbox("eff_time", "Эфффект"); // Включаем эффект перед показом времени
+  jee.range("td", 5, 150, 5, "Скорость эффекта перед часами");
 
   jee.checkbox("ch1_on", "Канал1"); // Это переключатель, чтобы щелкать релющкой вручную
   jee.checkbox("ch2_on", "Канал2"); // Это переключатель, чтобы щелкать релющкой вручную
@@ -114,6 +133,7 @@ void interface(){ // функция в которой мы формируем в
   jee.page(); // разделитель между страницами
   // Страница "Настройки WiFi"
   jee.formWifi(); // готовая форма настроек Wi-Fi
+  //jee.button("rst", "#00dd00", "Reset", 1);
   jee.page(); // разделитель между страницами
 
 }

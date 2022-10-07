@@ -5,6 +5,7 @@
 bool wifiFirstConnected = false;
 ipv4_addr my_ip;
 String strIPaddr;
+bool time_setup = false;
 
 //Edit These Lines According To Your Timezone and Daylight Saving Time
 //TimeZone Settings Details https://github.com/JChristensen/Timezone
@@ -54,6 +55,7 @@ void ntp(int interval, String NTPhost, int8_t timeZone)
         NTP.begin(NTPhost, timeZone, true, 0);
         NTP.setInterval(interval);
         ntp_setup = true;
+        time_setup = true;
     }
     Serial.println(NTP.getTimeDateString() + " Включено: " + NTP.getUptimeString() + " Обновлено: " + NTP.getTimeDateString(NTP.getFirstSync()).c_str());
 }

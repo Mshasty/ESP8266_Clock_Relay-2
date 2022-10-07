@@ -42,8 +42,11 @@ void setup() {
 void loop() {
 	jee.handle(); // цикл, необходимый фреймворку
 	ds_handle(ds_int); // цикл замера температуры ds18b20
-	update_handle(5000);
-	//date_handle(YearTime);
+	if (time_setup) {
+		update_handle(NTP_req*60000);
+	} else {
+		update_handle(5000);
+	}
 	date_handle(YearTime * 1000);
 	if (!YearShow) time_handle();
 	relay();

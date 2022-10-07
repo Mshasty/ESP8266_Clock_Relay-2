@@ -37,13 +37,59 @@ void digitalClockDisplay() {
 }
 
 void ShowEffect() {
+  static bool ccw = false;
   lc.clearDisplay(0);
-  uint8_t kk = 2;
-  for (uint8_t i = 1; i < 7; i++) {
-    for (uint8_t j = 1; j < 9; j++)
-      lc.setRow(0, j, kk);
-    kk <<= 1;
-    delay(80);
+  if (ccw) {
+    uint8_t kk = 2;
+    for (uint8_t i = 1; i < 7; i++) {
+      for (uint8_t j = 0; j < 8; j++)
+        lc.setRow(0, j, kk);
+      kk <<= 1;
+      delay(80);
+    }
+    ccw=false;
+  } else {
+    uint8_t kk = 64;
+    for (uint8_t i = 1; i < 7; i++) {
+      for (uint8_t j = 0; j < 8; j++)
+        lc.setRow(0, j, kk);
+      kk >>= 1;
+      delay(80);
+    }
+    ccw=true;
+  }
+}
+
+void ShowEffect2() {
+  if (eff_time) {
+    lc.clearDisplay(0);
+    for (uint8_t j = 7; j > 0; j--) {
+      lc.setRow(0, j, 2);
+      if (j<6) lc.setRow(0, j+2, 0);
+      delay(td);
+      if (j<7) lc.setRow(0, j+1, 32);
+      lc.setRow(0, j, 34);
+      delay(td);
+    }
+    lc.setRow(0, 2, 0);
+    lc.setRow(0, 0, 2);
+    delay(td);
+    lc.setRow(0, 0, 3);
+    delay(td);
+    lc.setRow(0, 1, 0);
+    lc.setRow(0, 0, 5);
+    delay(td);
+    lc.setRow(0, 0, 4);
+    for (uint8_t j = 1; j < 8; j++) {
+      if (j>1) lc.setRow(0, j-2, 0);
+      lc.setRow(0, j, 16);
+      delay(td);
+      lc.setRow(0, j-1, 4);
+      lc.setRow(0, j, 20);
+      delay(td);
+    }
+    lc.setRow(0, 6, 0);
+    delay(td);
   }
 }
 
@@ -78,7 +124,7 @@ void digitalTempDisplay() {
 
 void date_handle(unsigned long DateTimeView) {
   static unsigned long PrevDate = 0;
-  static boolean LastDate = false;
+  static boolean LastDate = false; //
 
   if (YearTime > 5) {
     if (PrevDate + DateTimeView > millis())
@@ -88,6 +134,7 @@ void date_handle(unsigned long DateTimeView) {
         Serial.println(F("*** End show Date/temp ***"));
         PrevDate = millis();
         YearShow = false;
+        ShowEffect2();
       }
     } else {
       YearShow = true;
@@ -143,7 +190,7 @@ void ShowConnect() {
   lc.setRow(0, 2, 0x4e);
   lc.setRow(0, 1, 0x0f);
   lc.setChar(0, 0, ' ', false);
-  delay(3000);  
+  delay(300);  
 }
 
 void IP_Show() {
